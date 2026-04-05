@@ -1,1 +1,86 @@
-<h1>TN5000 Web App</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TN5000 Skin Cancer Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+</head>
+<body>
+<div class="page">
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🔬</span>
+        <div>
+          <h1>TN5000 Detector</h1>
+          <p>Skin Lesion Classification · Benign vs Malignant</p>
+        </div>
+      </div>
+      <span class="badge">AI Powered</span>
+    </div>
+  </header>
+  <main class="main">
+    <div class="card upload-card" id="uploadCard">
+      <div class="upload-zone" id="dropZone">
+        <div class="upload-icon">📁</div>
+        <p class="upload-title">Drop your skin lesion image here</p>
+        <p class="upload-sub">or click to browse · JPG PNG WEBP</p>
+        <input type="file" id="fileInput" accept="image/*" hidden/>
+        <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Choose Image</button>
+      </div>
+    </div>
+    <div class="result-grid" id="resultGrid" style="display:none;">
+      <div class="card preview-card">
+        <h2 class="card-title">Uploaded Image</h2>
+        <img id="previewImg" src="" alt="Preview" class="preview-img"/>
+        <button class="btn-secondary" id="newBtn">Upload New Image</button>
+      </div>
+      <div class="card result-card">
+        <h2 class="card-title">Prediction Result</h2>
+        <div id="loadingState" class="loading-state">
+          <div class="spinner"></div>
+          <p>Analyzing image...</p>
+        </div>
+        <div id="resultState" style="display:none;">
+          <div class="verdict" id="verdictBox">
+            <span class="verdict-label">Predicted Class</span>
+            <span class="verdict-value" id="verdictValue">—</span>
+          </div>
+          <div class="bars">
+            <div class="bar-row">
+              <span class="bar-label">Benign</span>
+              <div class="bar-track">
+                <div class="bar-fill benign-fill" id="benignBar"></div>
+              </div>
+              <span class="bar-pct" id="benignPct">0%</span>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">Malignant</span>
+              <div class="bar-track">
+                <div class="bar-fill malignant-fill" id="malignantBar"></div>
+              </div>
+              <span class="bar-pct" id="malignantPct">0%</span>
+            </div>
+          </div>
+          <div class="confidence-row">
+            <span>Confidence</span>
+            <strong id="confidenceVal">—</strong>
+          </div>
+          <div class="disclaimer">
+            For research only. Not a medical diagnosis. Consult a dermatologist.
+          </div>
+        </div>
+        <div id="errorState" style="display:none;" class="error-state">
+          <p id="errorMsg">Something went wrong.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer">
+    Built with TensorFlow · TN5000 Dataset · Flask · Render
+  </footer>
+</div>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
