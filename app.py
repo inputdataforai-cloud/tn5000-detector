@@ -9,53 +9,31 @@ import traceback
 
 app = Flask(__name__)
 
-MODEL_PATH = os.environ.get("MODEL_PATH", "best_tn5000_model.keras")
-IMG_SIZE   = (224, 224)
+TFLITE_PATH = "model.tflite"
+IMG_SIZE    = (224, 224)
 interpreter = None
 
-def download_model_if_missing():
-    if os.path.exists(MODEL_PATH):
-        print(f"Model found: {MODEL_PATH}", flush=True)
+def download_tflite_if_missing():
+    if os.path.exists(TFLITE_PATH):
+        print(f"TFLite model found!", flush=True)
         return
     model_url = os.environ.get("MODEL_URL", "")
     if not model_url:
         raise FileNotFoundError("MODEL_URL not set")
-    print(f"Downloading model...", flush=True)
-    r = req.get(model_url, stream=True, timeout=600)
+    print(f"Downloading TFLite model...", flush=True)
+    r = req.get(model_url, stream=True, timeout=120)
     r.raise_for_status()
-    with open(MODEL_PATH, "wb") as f:
+    with open(TFLITE_PATH, "wb") as f:
         for chunk in r.iter_content(chunk_size=8192):
             f.write(chunk)
-    size = os.path.getsize(MODEL_PATH) / (1024*1024)
-    print(f"Model downloaded! Size: {size:.1f} MB", flush=True)
+    size = os.path.getsize(TFLITE_PATH) / (1024*1024)
+    print(f"TFLite downloaded! Size: {size:.2f} MB", flush=True)
 
-def convert_and_load():
+def load_interpreter():
     global interpreter
     import tensorflow as tf
-
-    # Disable GPU on server
-    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-
-    print("Loading model...", flush=True)
-    model = tf.keras.models.load_model(MODEL_PATH)
-
-    # Convert to TFLite — much faster and lighter
-    print("Converting to TFLite...", flush=True)
-    converter = tf.lite.TFLiteConverter.from_keras_model(model)
-    converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    tflite_model = converter.convert()
-
-    # Save tflite model
-    tflite_path = "model.tflite"
-    with open(tflite_path, "wb") as f:
-        f.write(tflite_model)
-
-    size = os.path.getsize(tflite_path) / (1024*1024)
-    print(f"TFLite model saved: {size:.1f} MB", flush=True)
-
-    # Load interpreter
-    interpreter = tf.lite.Interpreter(model_path=tflite_path)
+    print("Loading TFLite interpreter...", flush=True)
+    interpreter = tf.lite.Interpreter(model_path=TFLITE_PATH)
     interpreter.allocate_tensors()
     print("TFLite interpreter ready!", flush=True)
 
@@ -68,8 +46,8 @@ def predict_image(img_array):
     return float(output[0][0])
 
 try:
-    download_model_if_missing()
-    convert_and_load()
+    download_tflite_if_missing()
+    load_interpreter()
 except Exception as e:
     print(f"STARTUP ERROR: {e}", flush=True)
     traceback.print_exc()
@@ -94,7 +72,7 @@ def predict():
         img_array   = np.expand_dims(
                           np.array(img_resized, dtype=np.float32), axis=0)
 
-        print("Running TFLite prediction...", flush=True)
+        print("Running prediction...", flush=True)
         prob = predict_image(img_array)
         print(f"Prediction: {prob:.4f}", flush=True)
 
